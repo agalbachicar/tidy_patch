@@ -1,3 +1,4 @@
+---
 # Run against all the files: pre-commit run -a
 # Install the git hook scripts: pre-commit install
 
@@ -25,9 +26,21 @@ repos:
           - flake8-quotes
         args: ["--config=./.flake8"]
   - repo: https://github.com/psf/black
-    rev:  25.1.0
+    rev: 25.1.0
     hooks:
       - id: black
         args:
           - --line-length=120
           - --skip-string-normalization
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--strict]
+  - repo: local
+    hooks:
+      - id: hadolint-local
+        name: Lint Dockerfiles (Local Hadolint)
+        language: system
+        entry: hadolint
+        files: '\.dockerfile$'
