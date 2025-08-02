@@ -8,16 +8,13 @@ import difflib
 import ollama
 import subprocess
 from typing import Any
+from .prompt import (
+    get_general_expert_prompt,
+    Tokens,
+)
 from .violation import Violation
 
 
-ORIGINAL_CODE_TOKEN: str = 'original_code'
-PROPOSED_CODE_TOKEN: str = 'proposed_code'
-DIFF_TOKEN: str = 'diff'
-EXPLANATION_TOKEN: str = 'explanation'
-SUGGESTION_TOKEN: str = 'suggestion'
-FROM_FILE_A_TOKEN: str = 'a_filepath'
-FROM_FILE_B_TOKEN: str = 'b_filepath'
 EXTENSIONS_TO_CHECK: tuple = ('.py', '.h', '.hh', '.hpp', '.hxx', '.c', '.cc', '.cpp', '.cxx')
 
 
@@ -44,41 +41,6 @@ def get_staged_diff_files() -> list[str]:
         sys.exit(1)
 
 
-def get_system_prompt() -> str:
-    """Return the sytem promopt."""
-    return f"""Your task is to review the provided code changes,
-identify style violations, explain them, and suggest corrections.
-Here are the key guidelines to follow:
-- **ROS 2 Best Practices**: Defensive programming (check return codes, throw exceptions).
-All error messages should go to `stderr`. Declare variables in the narrowest possible scope.
-Groups of items (dependencies, imports, includes) should be sorted alphabetically.
-For C++, avoid direct streaming (`<<`) to `stdout`/`stderr` to prevent interleaving
-between multiple threads. Avoid references for `std::shared_ptr` as this subverts
-reference counting.
-- **REP Conventions**: ROS package names should be lowercase alphanumeric with underscores,
-without consecutive underscores, and at least 2 characters long (REP 144).
-Units should be SI (meters, kilograms, seconds, radians).
-Coordinate systems should be right-handed: x forward, y left, z up (REP 103).
-- **Google C++ Style Guide**: All header files should have `#define` guards with the format
-`<PROJECT>_<PATH>_<FILE>_H_` or `#pragma once`.
-Minimize includes. `inline` functions should be small (10 lines or less).
-Input-only parameters should come before output parameters.
-Exceptions are generally forbidden except when checking function pre-conditions.
-Use open braces for function, class, and struct definitions, but "cuddled" braces for
-`if`, `else`, `while`, `for`, etc.
-Answer **only** with a json formatted string with a full list of violations.
-When there are no violations, return an empty string in json format.
-Each violation needs to have the following keys:
-    "{ORIGINAL_CODE_TOKEN}": "<original code block>",
-    "{PROPOSED_CODE_TOKEN}": "<proposed code block>",
-    "{DIFF_TOKEN}": "<git diff>",
-    "{EXPLANATION_TOKEN}": "<Clear explanation of the violation and the broken rule>",
-    "{SUGGESTION_TOKEN}": "<Concise suggestion for the correction>",
-    "{FROM_FILE_A_TOKEN}": "<File path that appears after a/ in the git diff.>",
-    "{FROM_FILE_B_TOKEN}": "<File path that appears after b/ in the git diff.>"
-"""
-
-
 def call_ollama_api(
     diff_content: str,
     config,
@@ -92,7 +54,7 @@ def call_ollama_api(
         '\nPlease adhere strictly to the requested output format.'
     )
     messages: list[dict[str, str]] = [
-        {'role': 'system', 'content': get_system_prompt()},
+        {'role': 'system', 'content': get_general_expert_prompt()},
         {'role': 'user', 'content': user_prompt},
     ]
 
@@ -128,13 +90,13 @@ def generate_git_diff(original_code: str, proposed_code: str, a_filepath: str, b
 def dict_to_violation(in_dict: dict[str, str]) -> Violation:
     """Create a violation from a dictionary."""
     return Violation(
-        original_code=in_dict[ORIGINAL_CODE_TOKEN],
-        proposed_code=in_dict[PROPOSED_CODE_TOKEN],
-        diff=in_dict[DIFF_TOKEN],
-        explanation=in_dict[EXPLANATION_TOKEN],
-        suggestion=in_dict[SUGGESTION_TOKEN],
-        a_filepath=in_dict[FROM_FILE_A_TOKEN],
-        b_filepath=in_dict[FROM_FILE_B_TOKEN],
+        original_code=in_dict[Tokens.ORIGINAL_CODE_TOKEN],
+        proposed_code=in_dict[Tokens.PROPOSED_CODE_TOKEN],
+        diff=in_dict[Tokens.DIFF_TOKEN],
+        explanation=in_dict[Tokens.EXPLANATION_TOKEN],
+        suggestion=in_dict[Tokens.SUGGESTION_TOKEN],
+        a_filepath=in_dict[Tokens.FROM_FILE_A_TOKEN],
+        b_filepath=in_dict[Tokens.FROM_FILE_B_TOKEN],
     )
 
 
