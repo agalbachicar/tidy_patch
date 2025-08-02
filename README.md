@@ -4,6 +4,28 @@ LLM based tool that suggests edits to your code patches based on your rule style
 
 ## Developing
 
+### Virtual environment
+
+Install venv
+
+```sh
+sudo apt-get install python3.10-venv
+```
+
+Create a venv:
+
+```sh
+python3 -m venv .venv
+```
+
+Source the venv:
+
+```sh
+source .venv/bin/activate
+```
+
+### Pre-commit
+
 Install pre-commit dependency.
 
 ```sh
@@ -27,6 +49,14 @@ Run pre-pre-commit checks for the entire repository.
 
 ```sh
 pre-commit run --all-files
+```
+
+## Build and install dependencies
+
+Perform the package installation in editable mode:
+
+```sh
+pip install -e .
 ```
 
 ## Install docker configurations

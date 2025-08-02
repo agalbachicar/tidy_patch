@@ -1,0 +1,3 @@
+[tool.pycodestyle]
+ignore = ''
+max-line-length = 120

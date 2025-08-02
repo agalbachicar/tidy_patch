@@ -44,3 +44,8 @@ repos:
         language: system
         entry: hadolint
         files: '\.dockerfile$'
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args: ["--config=./.pydocstyle"]
