@@ -1,0 +1,13 @@
+{
+  "enabled_checks":
+  {
+    "ros2_best_practices": true,
+    "rep_conventions": true,
+    "google_cpp_style": true
+  },
+  "ros_distro": "jazzy",
+  "check_ros2_cpp_stdout": true,
+  "check_google_cpp_header_guards": true,
+  "check_google_cpp_exceptions": true,
+  "temperature": 0.1
+}

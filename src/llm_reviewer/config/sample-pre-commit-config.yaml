@@ -1,0 +1,15 @@
+---
+repos:
+  - repo: local
+    hooks:
+      - id: llm-pr-review
+        name: LLM PR Review
+        entry: llm-pr-reviewer
+        language: system
+        types: [python, c++, c]  # Files types to check.
+        files: \.(py|cpp|h|hpp)$  # regex of files to include.
+        exclude: ^(docs/|tests/)  # regex of files to exclude.
+        args: [--config-file, .llm-review-config.json, --ros-distro, jazzy]
+        # Do not pass the names of the files directly.
+        # The script will read the diff.
+        pass_filenames: false
