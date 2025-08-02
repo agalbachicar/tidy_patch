@@ -20,13 +20,27 @@ FROM_FILE_A_TOKEN: str = 'a_filepath'
 FROM_FILE_B_TOKEN: str = 'b_filepath'
 DIFF_ORIGINAL_TOKEN: str = '--- a/'
 DIFF_NEW_TOKEN: str = '--- b/'
+EXTENSIONS_TO_CHECK: tuple = ('.py', '.h', '.hh', '.hpp', '.hxx', '.c', '.cc', '.cpp', '.cxx')
 
 
-def get_staged_diff() -> str:
+def get_staged_diff(filepath: str = '') -> str:
     """Capture the difference of files in the staging area."""
+    cmd: list[str] = ['git', 'diff', '--staged']
+    if filepath:
+        cmd.append(filepath)
     try:
-        result = subprocess.run(['git', 'diff', '--staged'], capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f'Error getting Git diff: {e}', file=sys.stderr)
+        sys.exit(1)
+
+
+def get_staged_diff_files() -> list[str]:
+    """Capture the list of files in the staging area."""
+    try:
+        result = subprocess.run(['git', 'diff', '--name-only', '--staged'], capture_output=True, text=True, check=True)
+        return result.stdout.strip().split('\n')
     except subprocess.CalledProcessError as e:
         print(f'Error getting Git diff: {e}', file=sys.stderr)
         sys.exit(1)
@@ -126,7 +140,7 @@ def dict_to_violation(in_dict: dict[str, str]) -> Violation:
     )
 
 
-def parse_llm_output(llm_output: str, file_paths: list[str]) -> list[Violation]:
+def parse_llm_output(llm_output: str) -> list[Violation]:
     """Parse the LLM output and return a list of violations."""
     violations: list[Violation] = []
     llm_output = llm_output[7:] if llm_output.startswith('```json') else llm_output
@@ -178,25 +192,20 @@ def main() -> None:
     ros_distro = args.ros_distro
     config = load_config(config_file)
 
-    # Checks the files in staging.
-    diff_content = get_staged_diff()
-    if not diff_content.strip():
-        print('There are no changes to review.')
-        sys.exit(0)
-
     # Extract filenames form the diff to pass them to the parser.
-    modified_files: list[str] = []
-    for line in diff_content.splitlines():
-        stripping_len = len(DIFF_ORIGINAL_TOKEN)
-        if line.startswith(DIFF_ORIGINAL_TOKEN) or line.startswith(DIFF_NEW_TOKEN):
-            # Extract the filename, elimnate "a/" and "b/".
-            # Assert there are no duplicates when the file appears in both lines (a/ and b/).
-            file_name: str = line[stripping_len:].strip()
-            if file_name and file_name not in modified_files:
-                modified_files.append(file_name)
+    modified_files: list[str] = get_staged_diff_files()
+    modified_files[:] = [f for f in modified_files if f.endswith(EXTENSIONS_TO_CHECK)]
 
-    llm_output = call_ollama_api(diff_content, config, ros_distro)
-    violations = parse_llm_output(llm_output, modified_files)
+    # Create individual diff chunks for each file to have more
+    # precide response from the LLM and reduce the context size as well.
+    diff_chunks: list[str] = list(map(get_staged_diff, modified_files))
+    diff_chunks[:] = [x for x in diff_chunks if x]
+
+    # Make multiple calls for each file difference.
+    violations: list[Violation] = []
+    for diff_chunk in diff_chunks:
+        llm_output = call_ollama_api(diff_chunk, config, ros_distro)
+        violations.extend(parse_llm_output(llm_output))
 
     if violations:
         print(f'\n--- LLM generated review. Found {len(violations)} violations. ---')
