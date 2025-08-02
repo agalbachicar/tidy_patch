@@ -18,8 +18,6 @@ EXPLANATION_TOKEN: str = 'explanation'
 SUGGESTION_TOKEN: str = 'suggestion'
 FROM_FILE_A_TOKEN: str = 'a_filepath'
 FROM_FILE_B_TOKEN: str = 'b_filepath'
-DIFF_ORIGINAL_TOKEN: str = '--- a/'
-DIFF_NEW_TOKEN: str = '--- b/'
 EXTENSIONS_TO_CHECK: tuple = ('.py', '.h', '.hh', '.hpp', '.hxx', '.c', '.cc', '.cpp', '.cxx')
 
 
