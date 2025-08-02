@@ -16,6 +16,8 @@ EXPLANATION_TOKEN: str = '--- EXPLANATION ---'
 SUGGESTION_TOKEN: str = '--- SUGGESTION ---'
 CODE_BLOCK_TOKEN: str = '```'
 LANGUAGE_TOKEN: str = '<language>'
+DIFF_ORIGINAL_TOKEN: str = '--- a/'
+DIFF_NEW_TOKEN: str = '--- b/'
 
 
 def get_staged_diff() -> str:
@@ -213,10 +215,11 @@ def main() -> None:
     # Extract filenames form the diff to pass them to the parser.
     modified_files = []
     for line in diff_content.splitlines():
-        if line.startswith('--- a/') or line.startswith('+++ b/'):
-            # Extract the filename, elimnate "a/" and "b/" plus potential tabs and spaces.
-            # Assert there are no duplicates when the file appears in both lines (a/ and b/)
-            file_name = line[4:].strip().split('\t').split(' ')
+        stripping_len = len(DIFF_ORIGINAL_TOKEN)
+        if line.startswith(DIFF_ORIGINAL_TOKEN) or line.startswith(DIFF_NEW_TOKEN):
+            # Extract the filename, elimnate "a/" and "b/".
+            # Assert there are no duplicates when the file appears in both lines (a/ and b/).
+            file_name: str = line[stripping_len:].strip()
             if file_name and file_name not in modified_files:
                 modified_files.append(file_name)
 
