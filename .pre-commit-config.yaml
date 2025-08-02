@@ -1,0 +1,33 @@
+# Run against all the files: pre-commit run -a
+# Install the git hook scripts: pre-commit install
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-ast
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-xml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-builtins
+          - flake8-comprehensions
+          - flake8-docstrings
+          - flake8-quotes
+        args: ["--config=./.flake8"]
+  - repo: https://github.com/psf/black
+    rev:  25.1.0
+    hooks:
+      - id: black
+        args:
+          - --line-length=120
+          - --skip-string-normalization
