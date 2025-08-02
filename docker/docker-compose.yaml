@@ -1,0 +1,28 @@
+---
+
+services:
+  ollama:
+    build:
+      context: ..
+      dockerfile: docker/ollama.dockerfile
+    volumes:
+      - ollama_data:/root/.ollama
+    container_name: ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434  #
+      - OLLAMA_ORIGINS=*  # Development mode, allow access from all origins.
+    tty: true
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+
+volumes:
+  ollama_data:

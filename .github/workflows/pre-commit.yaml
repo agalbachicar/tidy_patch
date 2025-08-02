@@ -1,16 +1,25 @@
+---
 name: pre-commit
 
-on:
+on:  # yamllint disable-line rule:truthy
   pull_request:
   push:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   pre-commit:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - uses: pre-commit/action@v3.0.1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: install and execute hadolint
+        shell: bash
+        run: |
+          HADOLINT_URL="https://github.com/hadolint/hadolint/\
+          releases/download/v2.12.0/hadolint-Linux-x86_64"
+          wget -O hadolint ${HADOLINT_URL}
+          chmod +x hadolint
+          sudo mv hadolint /bin/hadolint
+      - uses: pre-commit/action@v3.0.1
