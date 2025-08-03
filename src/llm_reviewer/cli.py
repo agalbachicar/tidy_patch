@@ -20,7 +20,10 @@ EXTENSIONS_TO_CHECK: tuple = ('.py', '.h', '.hh', '.hpp', '.hxx', '.c', '.cc', '
 
 def get_staged_diff(filepath: str = '') -> str:
     """Capture the difference of files in the staging area."""
-    cmd: list[str] = ['git', 'diff', '--staged']
+    # When using --staged, we only care about the files that have been added for commiting.
+    # When using -W, we provide more context in the diff to bring in the entire function, which
+    # makes the LLM have better context.
+    cmd: list[str] = ['git', 'diff', '--staged', '-W']
     if filepath:
         cmd.append(filepath)
     try:

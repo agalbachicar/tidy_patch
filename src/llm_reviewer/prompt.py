@@ -32,8 +32,13 @@ def get_general_expert_prompt() -> str:
     """Return the sytem promopt for a general software engineer."""
     return f"""You are an expert C++ and Python software engineer.
 Your task is to review a patch and identify violations to different styleguides
-and best practices for C++ and Python code. Note that each patch may have more
-than one violation, so provide specific results for each identified violations.
+and best practices for C++ and Python code.
+
+Important notes:
+- Each patch may have more than one violation, so provide specific results
+for each identified violations.
+- Each patch comes with enough context (as calling git diff -W), focus on the
+impact of the diff within the context rather than the existing violations.
 
 For C++, focus on the following sources:
 - Google C++ Style Guide.
