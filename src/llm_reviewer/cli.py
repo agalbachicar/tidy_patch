@@ -138,6 +138,12 @@ def parse_args() -> dict[str, Any]:
         help='Path to the configuration file in JSON.',
     )
     parser.add_argument(
+        '--exit-zero',
+        default=False,
+        help='Make the program always return zero regardless of the review result.',
+        action='store_true',
+    )
+    parser.add_argument(
         '--ros-distro',
         default='jazzy',
         help='ROS distribution name.',
@@ -148,8 +154,11 @@ def parse_args() -> dict[str, Any]:
 def main() -> None:
     """Entry point."""
     args = parse_args()
-    config_file = args.config_file
-    ros_distro = args.ros_distro
+    config_file: str = args.config_file
+    ros_distro: str = args.ros_distro
+    force_exit_zero: bool = args.exit_zero
+    exit_result: int = 0
+
     config = load_config(config_file)
 
     # Extract filenames form the diff to pass them to the parser.
@@ -167,17 +176,16 @@ def main() -> None:
         llm_output = call_ollama_api(diff_chunk, config, ros_distro)
         violations.extend(parse_llm_output(llm_output))
 
+    print(f'\n--- LLM generated review. Found {len(violations)} violations. ---', file=sys.stderr)
     if violations:
-        print(f'\n--- LLM generated review. Found {len(violations)} violations. ---')
         for i, violation in enumerate(violations):
-            print(f'----\nViolation {i+1}:\n{violation}\n----')
-        print('\n--- End of the review ---')
-        # Prevent commit.
-        sys.exit(1)
+            print(f'----\nViolation {i+1}:\n{violation}\n----', file=sys.stderr)
+        exit_result = 1
     else:
-        print('No violations found.')
-        # Let the commit continue.
-        sys.exit(0)
+        exit_result = 0
+    print('\n--- End of the review ---', file=sys.stderr)
+
+    sys.exit(exit_result if not force_exit_zero else 0)
 
 
 if __name__ == '__main__':
