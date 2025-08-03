@@ -8,7 +8,16 @@ repos:
         language: system
         files: \.(py|cpp|h|hpp)$  # regex of files to include.
         exclude: ^(docs/|tests/)  # regex of files to exclude.
-        args: [--config-file, .llm-review-config.json, --ros-distro, jazzy]
+        # This will tell pre-commit to hook the output regardless.
+        verbose: true
+        args:
+          - --config-file
+          - .llm-review-config.json
+          - --ros-distro
+          - jazzy
+          # When set, forces the configuration to always pass
+          # regardless of the output.
+          - --exit-zero
         # Do not pass the names of the files directly.
         # The script will read the diff.
         pass_filenames: false
